@@ -1,0 +1,27 @@
+name: Atualiza Ativos
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"  # Executa a cada 15 minutos
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar o repositório
+        uses: actions/checkout@v3
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Rodar o script de atualização
+        run: node atualizaAtivos.js
+        env:
+          SUPABASE_API_KEY: ${{ secrets.SUPABASE_API_KEY }}
