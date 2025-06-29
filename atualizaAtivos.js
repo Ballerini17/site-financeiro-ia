@@ -7,15 +7,25 @@ const BRAPI_TOKEN = '6VjwF1rwmFcDbWduyA5DpB';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const simbolos = [
+// Exemplo resumido de ativos — substitua por lista completa depois
+const ativos = [
   { simbolo: 'VALE3', nome: 'Vale', tipo: 'acao' },
   { simbolo: 'PETR4', nome: 'Petrobras', tipo: 'acao' },
   { simbolo: 'ITUB4', nome: 'Itaú', tipo: 'acao' },
-  { simbolo: 'BBDC4', nome: 'Bradesco', tipo: 'acao' }
+  { simbolo: 'BBDC4', nome: 'Bradesco', tipo: 'acao' },
+  { simbolo: 'HGLG11', nome: 'CSHG Logística', tipo: 'fii' },
+  { simbolo: 'MXRF11', nome: 'Maxi Renda', tipo: 'fii' },
+  { simbolo: 'AAPL34', nome: 'Apple BDR', tipo: 'bdr' },
+  { simbolo: 'MSFT34', nome: 'Microsoft BDR', tipo: 'bdr' },
+  { simbolo: 'BOVA11', nome: 'ETF Ibovespa', tipo: 'etf' },
+  { simbolo: 'IVVB11', nome: 'ETF S&P 500', tipo: 'etf' },
+  { simbolo: 'BTC-USD', nome: 'Bitcoin', tipo: 'cripto' }
 ];
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 async function atualizaAtivos() {
-  for (let ativo of simbolos) {
+  for (let ativo of ativos) {
     const url = `https://brapi.dev/api/quote/${ativo.simbolo}?token=${BRAPI_TOKEN}`;
 
     try {
@@ -28,33 +38,29 @@ async function atualizaAtivos() {
       }
 
       const dados = result.results[0];
+      console.log(`🔎 Dados recebidos para ${ativo.simbolo}:`, dados);
 
-      if (!dados.regularMarketPrice) {
-        console.error(`❌ Dados inválidos para ${ativo.simbolo}:`, dados);
-        continue;
-      }
-
-      const preco = parseFloat(dados.regularMarketPrice);
+      const preco = parseFloat(dados.regularMarketPrice ?? 0);
       const atualizado_em = new Date();
 
       const { data, error } = await supabase
         .from('ativos')
         .upsert({
-          simbolo: ativo.simbolo,
+          simbolo: ativo.symbol ?? ativo.simbolo,
           nome: ativo.nome,
           preco,
           atualizado_em,
           tipo: ativo.tipo
         }, { onConflict: 'simbolo' });
 
-      console.log(`Resposta supabase para ${ativo.simbolo}:`, { data, error });
-
       if (error) {
         console.error(`❌ Erro ao atualizar ${ativo.simbolo}:`, error);
-        console.error('Detalhes completos do erro:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
       } else {
         console.log(`✅ ${ativo.simbolo} atualizado com sucesso!`);
       }
+
+      // Aguarda 1 segundo entre requisições para não estourar o plano
+      await delay(1000);
     } catch (e) {
       console.error(`❌ Erro na requisição para ${ativo.simbolo}:`, e);
     }
