@@ -2,7 +2,7 @@ name: Atualiza Ativos
 
 on:
   schedule:
-    - cron: "*/15 * * * *"  # Executa a cada 15 minutos
+    - cron: '0 */6 * * *'  # Executa a cada 15 minutos
   workflow_dispatch:
 
 jobs:
